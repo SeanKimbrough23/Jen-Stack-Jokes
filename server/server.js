@@ -1,7 +1,7 @@
 const express = require( 'express' );
 const app = express();
 const bodyParser = require( 'body-parser' );
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 // use bodyParser.urlencoded throughout the app with this:
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -36,6 +36,18 @@ let jokes = [
 
 // serve back static files
 app.use(express.static('server/public'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
+
+app.get('/jokes',  (req,res) => {
+  res.send(jokes);
+});
+
+app.post('/jokes', (req, res) => {
+  jokes.push(req.body);
+  res.sendStatus(200);
+});
+
 
 app.listen(PORT, () => {
   console.log('server running on: ', PORT);
