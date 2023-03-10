@@ -6,6 +6,9 @@ const PORT = process.env.PORT || 5000;
 // use bodyParser.urlencoded throughout the app with this:
 app.use(bodyParser.urlencoded({ extended: true }));
 
+let router = require('./routes/jokes.router');
+app.use('/jokes', router);
+
 let jokes = [
   {
     whoseJoke: "Danny",
