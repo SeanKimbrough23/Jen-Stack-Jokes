@@ -1,90 +1,79 @@
-console.log('client.js sourced');
+console.log("client.js sourced");
 
-$( document ).ready( onReady );
+$(document).ready(onReady);
 
+// startup function
 function onReady() {
-    console.log('DOM ready');
-
-$('#addjokeButton').on('click', function(event) {
-    event.preventDefault();
-    
-    addJoke();
-})
-    getJokes();
+  // console.log('DOM ready');
+  // listener for add joke button
+  $("#addJokeButton").on("click", submitJoke);
+  // function to retrieve jokes (subfunction: render jokes to DOM)
+  getJokes();
 }
 
-function addJoke (){
-    console.log('Inside add Joke', $(this));
-    const jokeToUpdate = $(this).parent().parent().data().id;
-
-    console.log('Joke to update' , jokeToUpdate);
-    $.ajax ({
-      method: 'PUT',
-      url: `/jokes/${jokeToUpdate}`
+// function to retrieve jokes.
+function getJokes() {
+  // console.log('rendering jokes function working');
+  $.ajax({
+    method: "GET",
+    url: "/retrieveJokes",
+  })
+    .then(function (response) {
+      // console.log('AJAX /retrieveJokes get Success!', response);
+      // function to render jokes to DOM.
+      render(response);
     })
-    .then ((response) => {
+    .catch(function () {
+      alert("Request Failed. Try again later.");
+    });
+}
+
+// actual DOM html code.
+// not especially fancy or interesting version but does the needful.
+function render(array) {
+  $("#outputDiv").empty();
+  $("#outputDiv").append(`
+    <ul>
+    `);
+  for (joke of array) {
+    $("#outputDiv").append(`
+        <li>${joke.whoseJoke}</li>
+        <li>${joke.jokeQuestion}</li>
+        <li>${joke.punchLine}
+    `);
+  }
+  $("#outputDiv").append(`
+    </ul>
+    `);
+}
+
+// function to take in joke and send to server.
+function submitJoke() {
+  // console.log('in postJoke')
+
+  // object to hold outgoing joke.
+  // can be wrapped in a if (whoseJoke&&etc) to prevent submission
+  // of empty fields.
+  let outGoingJoke = {
+    whoseJoke: $("#whoseJokeIn").val(),
+    jokeQuestion: $("#questionIn").val(),
+    punchLine: $("#punchlineIn").val(),
+  };
+  // console.log('outgoing Joke:', outGoingJoke)
+
+  // actual posting of object to server.
+  $.ajax({
+    method: "POST",
+    url: "/jokeSubmit",
+    data: outGoingJoke,
+  })
+    .then(function (response) {
+      console.log("joke submitted.");
       getJokes();
     })
-    .catch ((error) => {
-      alert('error on jokes route' , error);
-    })
-
-}
-
-function postJoke() {
-    console.log('inside post joke');
-    let payloadObject = {
-        whoseJoke: $('#whoseJokeIn').val(),
-        jokeQuestion: $('#questionIn').val(),
-        punchLine: $('#punchLineIn').val()   
-    }
-    $.ajax({
-        type: 'POST',
-        url: '/',
-        data: payloadObject
-    }).then( function (response) {
-        $('#whoseJokeIn').val(''),
-        $('#questionIn').val(''),
-        $('#punchLineIn').val(''),
-        getJokes();
+    .catch(function () {
+      alert(
+        "Your joke has failed to reach the server, possibly because it is not funny. Please try again later with a funnier joke."
+      );
     });
 }
-
-function getJokes() {
-    $("#outputDiv").empty();
-    $.ajax({
-        type: 'GET',
-        url: '/jokes'
-    }).then(function (response) {
-        const listOfJokes = response;
-        console.log("GET /jokes response", response);
-        // append data to the DOM
-        for (let i = 0; i < response.length; i++) {
-         
-            $('#outputDiv').append(`
-                <tr data-id=${response[i].id}>
-                    <td>${response[i].whoseJoke}</td>
-                    <td>${response[i].jokeQuestion}</td>
-                    <td>${response[i].punchLine}</td>
-                    
-                </tr>
-            `);
-          
-        }
-    });
-}
-function renderJokes(listOfJokes) {
-    // Empty previous data
-    $('#jokesTableBody').empty();
-    // Add all jokes to table
-    for (let joke of listOfJokes) {
-        $('#jokesTableBody').append(`
-                <tr>
-                    <td>${joke.whoseJoke}</td>
-                    <td>${joke.jokeQuestion}</td>
-                    <td>${joke.punchLine}</td>
-                </tr>`
-            );
-    }
-}
-
